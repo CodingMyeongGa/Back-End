@@ -18,10 +18,10 @@ public class LocationResponseDto {
     private Boolean nearbyStoreDetected;
     
     @JsonProperty("store_id")
-    private Integer storeId;
+    private Long storeId;
     
     @JsonProperty("visit_id")
-    private Integer visitId;
+    private Long visitId;
     
     @JsonProperty("points_awarded")
     private Integer pointsAwarded;

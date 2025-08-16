@@ -13,7 +13,7 @@ import lombok.Setter;
 public class PointBalanceResponseDto {
 
     @JsonProperty("user_id")
-    private Integer userId;
+    private Long userId;
     
     @JsonProperty("total_points")
     private Integer totalPoints;

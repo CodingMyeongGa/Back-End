@@ -9,6 +9,7 @@ import com.codingmyeonga.localstep.users.dto.StoreVisitTestRequestDto;
 import com.codingmyeonga.localstep.users.dto.StoreVisitTestResponseDto;
 import com.codingmyeonga.localstep.users.entity.StoreVisit;
 import com.codingmyeonga.localstep.users.repository.StoreVisitRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,8 @@ public class StoreVisitService {
     
     // 상점 근처 기준 반경 (미터)
     private static final double NEARBY_RADIUS_METERS = 50.0;
+    
+
 
     @Transactional
     public StoreVisitTestResponseDto createVisit(StoreVisitTestRequestDto requestDto) {
@@ -87,7 +90,7 @@ public class StoreVisitService {
         
         // 5. 포인트 지급
         pointService.addPoints(
-            requestDto.getUserId(), 
+            requestDto.getUserId().longValue(), 
             VISIT_POINTS, 
             PointHistory.PointReason.STORE_VISIT, 
             savedVisit.getVisitId(), 
@@ -101,18 +104,18 @@ public class StoreVisitService {
                 .build();
     }
     
-    private boolean isDuplicateVisit(Integer userId, Integer storeId) {
+    private boolean isDuplicateVisit(Long userId, Long storeId) {
         return storeVisitRepository.existsByUserIdAndStoreId(userId, storeId);
     }
     
-    private StoreLocation getStoreLocation(Integer storeId) {
+    private StoreLocation getStoreLocation(Long storeId) {
         // 실제로는 외부 API에서 상점 정보를 가져와야 함
         // 테스트용으로 하드코딩된 위치 반환
-        switch (storeId) {
+        switch (storeId.intValue()) {
             case 1:
-                return new StoreLocation(1, STORE_1_LAT, STORE_1_LNG);
+                return new StoreLocation(1L, STORE_1_LAT, STORE_1_LNG);
             case 2:
-                return new StoreLocation(2, STORE_2_LAT, STORE_2_LNG);
+                return new StoreLocation(2L, STORE_2_LAT, STORE_2_LNG);
             default:
                 return null;
         }
@@ -151,7 +154,7 @@ public class StoreVisitService {
      * @param endDate 종료 날짜 (선택사항)
      * @return 방문 기록 목록
      */
-    public List<StoreVisitResponseDto> getUserVisits(Integer userId, LocalDate startDate, LocalDate endDate) {
+    public List<StoreVisitResponseDto> getUserVisits(Long userId, LocalDate startDate, LocalDate endDate) {
         // 날짜 범위 설정
         LocalDateTime startDateTime = null;
         LocalDateTime endDateTime = null;
@@ -185,9 +188,9 @@ public class StoreVisitService {
     }
     
 
-    private String getStoreName(Integer storeId) {
+    private String getStoreName(Long storeId) {
         // 테스트용으로 하드코딩된 상점 이름
-        switch (storeId) {
+        switch (storeId.intValue()) {
             case 1:
                 return "테스트 상점 1";
             case 2:
@@ -232,7 +235,7 @@ public class StoreVisitService {
         // 3. 자동 방문 기록 생성
         StoreVisit storeVisit = StoreVisit.builder()
                 .userId(requestDto.getUserId())
-                .routeId(1) // 기본 루트 ID (실제로는 동적으로 설정)
+                .routeId(null) // 루트 ID는 null로 설정 (테스트용)
                 .storeId(nearbyStore.storeId)
                 .userLatitude(requestDto.getLatitude())
                 .userLongitude(requestDto.getLongitude())
@@ -244,7 +247,7 @@ public class StoreVisitService {
         
         // 4. 포인트 지급
         pointService.addPoints(
-            requestDto.getUserId(), 
+            requestDto.getUserId().longValue(), 
             VISIT_POINTS, 
             PointHistory.PointReason.STORE_VISIT, 
             savedVisit.getVisitId(), 
@@ -267,17 +270,17 @@ public class StoreVisitService {
      * @return 근처 상점 정보 (없으면 null)
      */
     private StoreLocation findNearbyStore(BigDecimal userLat, BigDecimal userLng) {
-        // 실제로는 외부 API에서 상점 목록을 가져와서 검색해야 함
+
         // 테스트용으로 하드코딩된 상점들 중에서 검색
         
         // 상점 1 확인
         if (isUserNearStore(userLat, userLng, STORE_1_LAT, STORE_1_LNG)) {
-            return new StoreLocation(1, STORE_1_LAT, STORE_1_LNG);
+            return new StoreLocation(1L, STORE_1_LAT, STORE_1_LNG);
         }
         
         // 상점 2 확인
         if (isUserNearStore(userLat, userLng, STORE_2_LAT, STORE_2_LNG)) {
-            return new StoreLocation(2, STORE_2_LAT, STORE_2_LNG);
+            return new StoreLocation(2L, STORE_2_LAT, STORE_2_LNG);
         }
         
         return null; // 근처 상점 없음
@@ -285,11 +288,11 @@ public class StoreVisitService {
     
     // 상점 위치 정보를 담는 내부 클래스
     private static class StoreLocation {
-        private final Integer storeId;
+        private final Long storeId;
         private final BigDecimal latitude;
         private final BigDecimal longitude;
         
-        public StoreLocation(Integer storeId, BigDecimal latitude, BigDecimal longitude) {
+        public StoreLocation(Long storeId, BigDecimal latitude, BigDecimal longitude) {
             this.storeId = storeId;
             this.latitude = latitude;
             this.longitude = longitude;

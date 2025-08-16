@@ -22,10 +22,10 @@ public class PointHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "point_id")
-    private Integer pointId;
+    private Long pointId;
 
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "reason", nullable = false, length = 30)
@@ -35,10 +35,10 @@ public class PointHistory {
     private Integer points;
 
     @Column(name = "related_visit_id")
-    private Integer relatedVisitId;
+    private Long relatedVisitId;
 
     @Column(name = "related_quest_id")
-    private Integer relatedQuestId;
+    private Long relatedQuestId;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

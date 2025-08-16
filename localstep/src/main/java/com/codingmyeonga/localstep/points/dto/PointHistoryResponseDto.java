@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class PointHistoryResponseDto {
 
     @JsonProperty("point_id")
-    private Integer pointId;
+    private Long pointId;
     
     @JsonProperty("reason")
     private String reason;

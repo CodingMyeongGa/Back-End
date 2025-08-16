@@ -21,20 +21,20 @@ public class Quest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "quest_id")
-    private Integer questId;
+    private Long questId;
 
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "quest_type", nullable = false, length = 50)
     private QuestType questType;
 
     @Column(name = "goal_id")
-    private Integer goalId;
+    private Long goalId;
 
     @Column(name = "target_store_id")
-    private Integer targetStoreId;
+    private Long targetStoreId;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;

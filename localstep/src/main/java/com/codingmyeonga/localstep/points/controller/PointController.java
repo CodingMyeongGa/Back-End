@@ -25,7 +25,7 @@ public class PointController {
      */
     @GetMapping("/{user_id}/points/balance")
     public ResponseEntity<PointBalanceResponseDto> getPointBalance(
-            @PathVariable("user_id") Integer userId) {
+            @PathVariable("user_id") Long userId) {
         
         PointBalanceResponseDto balance = pointService.getPointBalance(userId);
         return ResponseEntity.ok(balance);
@@ -40,7 +40,7 @@ public class PointController {
      */
     @GetMapping("/{user_id}/points/history")
     public ResponseEntity<List<PointHistoryResponseDto>> getPointHistory(
-            @PathVariable("user_id") Integer userId,
+            @PathVariable("user_id") Long userId,
             @RequestParam(value = "start_date", required = false) 
             @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam(value = "end_date", required = false) 

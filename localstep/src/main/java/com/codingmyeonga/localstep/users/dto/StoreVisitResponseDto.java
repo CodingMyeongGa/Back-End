@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
 public class StoreVisitResponseDto {
 
     @JsonProperty("visit_id")
-    private Integer visitId;
+    private Long visitId;
     
     @JsonProperty("store_id")
-    private Integer storeId;
+    private Long storeId;
     
     @JsonProperty("store_name")
     private String storeName;

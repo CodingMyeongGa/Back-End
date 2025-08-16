@@ -18,7 +18,7 @@ public class LocationRequestDto {
 
     @NotNull(message = "사용자 ID는 필수입니다.")
     @JsonProperty("user_id")
-    private Integer userId;
+    private Long userId;
 
     @NotNull(message = "위도는 필수입니다.")
     @JsonProperty("latitude")

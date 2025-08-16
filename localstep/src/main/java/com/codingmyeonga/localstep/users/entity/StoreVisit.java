@@ -22,16 +22,16 @@ public class StoreVisit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "visit_id")
-    private Integer visitId;
+    private Long visitId;
 
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @Column(name = "route_id", nullable = false)
-    private Integer routeId;
+    private Long routeId;
 
     @Column(name = "store_id", nullable = false)
-    private Integer storeId;
+    private Long storeId;
 
     @Column(name = "user_latitude", nullable = false, precision = 10, scale = 6)
     private BigDecimal userLatitude;

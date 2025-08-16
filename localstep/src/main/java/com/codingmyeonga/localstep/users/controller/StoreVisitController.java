@@ -23,7 +23,7 @@ public class StoreVisitController {
 
     @GetMapping("/{user_id}/visits")
     public ResponseEntity<List<StoreVisitResponseDto>> getVisits(
-            @PathVariable("user_id") Integer userId,
+            @PathVariable("user_id") Long userId,
             @RequestParam(value = "start_date", required = false) 
             @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @RequestParam(value = "end_date", required = false) 

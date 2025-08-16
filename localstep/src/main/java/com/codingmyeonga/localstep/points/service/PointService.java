@@ -23,8 +23,8 @@ public class PointService {
     private final PointHistoryRepository pointHistoryRepository;
 
     @Transactional
-    public void addPoints(Integer userId, Integer points, PointHistory.PointReason reason, 
-                         Integer relatedVisitId, Integer relatedQuestId) {
+    public void addPoints(Long userId, Integer points, PointHistory.PointReason reason, 
+                         Long relatedVisitId, Long relatedQuestId) {
         
         PointHistory pointHistory = PointHistory.builder()
                 .userId(userId)
@@ -43,7 +43,7 @@ public class PointService {
      * @param userId 사용자 ID
      * @return 포인트 잔액 정보
      */
-    public PointBalanceResponseDto getPointBalance(Integer userId) {
+    public PointBalanceResponseDto getPointBalance(Long userId) {
         Integer totalPoints = pointHistoryRepository.calculateTotalPointsByUserId(userId);
         
         return new PointBalanceResponseDto(userId, totalPoints);
@@ -56,7 +56,7 @@ public class PointService {
      * @param endDate 종료 날짜 (선택사항)
      * @return 포인트 히스토리 목록
      */
-    public List<PointHistoryResponseDto> getPointHistory(Integer userId, LocalDate startDate, LocalDate endDate) {
+    public List<PointHistoryResponseDto> getPointHistory(Long userId, LocalDate startDate, LocalDate endDate) {
         List<PointHistory> histories;
         
         if (startDate != null && endDate != null) {
@@ -111,7 +111,7 @@ public class PointService {
         // 1. 중복 지급 체크 (하루에 한 번만)
         if (isStepGoalRewardAlreadyGiven(requestDto.getUserId(), requestDto.getDate())) {
             return StepGoalRewardResponseDto.builder()
-                    .goalId(1) // Mock goal ID
+                    .goalId(1L) // Mock goal ID
                     .goalSteps(getUserStepGoal(requestDto.getUserId()))
                     .currentSteps(getUserCurrentSteps(requestDto.getUserId(), requestDto.getDate()))
                     .goalAchieved(true)
@@ -129,7 +129,7 @@ public class PointService {
         
         if (!goalAchieved) {
             return StepGoalRewardResponseDto.builder()
-                    .goalId(1) // Mock goal ID
+                    .goalId(1L) // Mock goal ID
                     .goalSteps(goalSteps)
                     .currentSteps(currentSteps)
                     .goalAchieved(false)
@@ -145,11 +145,11 @@ public class PointService {
             pointsToAward, 
             PointHistory.PointReason.STEP_GOAL, 
             null, 
-            1 // Mock quest ID
+            null // Quest ID는 null로 설정 (테스트용)
         );
         
         return StepGoalRewardResponseDto.builder()
-                .goalId(1) // Mock goal ID
+                .goalId(1L) // Mock goal ID
                 .goalSteps(goalSteps)
                 .currentSteps(currentSteps)
                 .goalAchieved(true)
@@ -161,7 +161,7 @@ public class PointService {
     /**
      * 특정 날짜에 걸음 목표 달성 포인트가 이미 지급되었는지 확인합니다.
      */
-    private boolean isStepGoalRewardAlreadyGiven(Integer userId, LocalDate date) {
+    private boolean isStepGoalRewardAlreadyGiven(Long userId, LocalDate date) {
         return pointHistoryRepository.existsStepGoalRewardByUserIdAndDate(userId, date);
     }
     
@@ -169,7 +169,7 @@ public class PointService {
      * 사용자의 목표 걸음 수를 조회합니다. (Mock)
      * TODO: 나중에 StepsRepository에서 실제 데이터로 교체
      */
-    private Integer getUserStepGoal(Integer userId) {
+    private Integer getUserStepGoal(Long userId) {
         // Mock: 모든 사용자의 목표를 5,000걸음으로 설정
         return 5000;
     }
@@ -178,7 +178,7 @@ public class PointService {
      * 사용자의 현재 걸음 수를 조회합니다. (Mock)
      * TODO: 나중에 StepsRepository에서 실제 데이터로 교체
      */
-    private Integer getUserCurrentSteps(Integer userId, LocalDate date) {
+    private Integer getUserCurrentSteps(Long userId, LocalDate date) {
         // Mock: 모든 사용자의 걸음 수를 6,000걸음으로 설정
         return 6000;
     }

@@ -15,7 +15,7 @@ import lombok.Setter;
 public class StoreVisitTestResponseDto {
 
     @JsonProperty("visit_id")
-    private Integer visitId;
+    private Long visitId;
     
     @JsonProperty("points_awarded")
     private Integer pointsAwarded;

@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
-public interface StoreVisitRepository extends JpaRepository<StoreVisit, Integer> {
+public interface StoreVisitRepository extends JpaRepository<StoreVisit, Long> {
     
     // 중복 방문 체크를 위한 메서드
-    boolean existsByUserIdAndStoreId(Integer userId, Integer storeId);
+    boolean existsByUserIdAndStoreId(Long userId, Long storeId);
     
     // 날짜 범위로 방문 기록 조회
     @Query("SELECT sv FROM StoreVisit sv WHERE sv.userId = :userId " +
@@ -21,7 +21,7 @@ public interface StoreVisitRepository extends JpaRepository<StoreVisit, Integer>
            "AND (:endDate IS NULL OR sv.visitedAt <= :endDate) " +
            "ORDER BY sv.visitedAt DESC")
     List<StoreVisit> findByUserIdAndDateRange(
-        @Param("userId") Integer userId,
+        @Param("userId") Long userId,
         @Param("startDate") LocalDateTime startDate,
         @Param("endDate") LocalDateTime endDate
     );

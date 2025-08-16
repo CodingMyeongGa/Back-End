@@ -17,15 +17,15 @@ public class StoreVisitTestRequestDto {
 
     @NotNull(message = "사용자 ID는 필수입니다.")
     @JsonProperty("user_id")
-    private Integer userId;
+    private Long userId;
 
     @NotNull(message = "루트 ID는 필수입니다.")
     @JsonProperty("route_id")
-    private Integer routeId;
+    private Long routeId;
 
     @NotNull(message = "상점 ID는 필수입니다.")
     @JsonProperty("store_id")
-    private Integer storeId;
+    private Long storeId;
 
     @NotNull(message = "사용자 위도는 필수입니다.")
     @JsonProperty("user_lat")

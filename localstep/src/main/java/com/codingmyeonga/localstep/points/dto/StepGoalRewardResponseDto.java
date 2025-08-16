@@ -15,7 +15,7 @@ import lombok.Setter;
 public class StepGoalRewardResponseDto {
 
     @JsonProperty("goal_id")
-    private Integer goalId;
+    private Long goalId;
     
     @JsonProperty("goal_steps")
     private Integer goalSteps;
