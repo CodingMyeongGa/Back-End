@@ -9,6 +9,8 @@ import com.codingmyeonga.localstep.points.repository.PointHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,13 +20,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PointService {
 
     private final PointHistoryRepository pointHistoryRepository;
 
     @Transactional
     public void addPoints(Long userId, Integer points, PointHistory.PointReason reason, 
-                         Long relatedVisitId, Long relatedQuestId) {
+                         Long relatedVisitId, Long relatedQuestId, LocalDate rewardDate) {
         
         PointHistory pointHistory = PointHistory.builder()
                 .userId(userId)
@@ -33,6 +36,7 @@ public class PointService {
                 .relatedVisitId(relatedVisitId)
                 .relatedQuestId(relatedQuestId)
                 .createdAt(LocalDateTime.now())
+                .rewardDate(rewardDate)
                 .build();
         
         pointHistoryRepository.save(pointHistory);
@@ -108,8 +112,13 @@ public class PointService {
     @Transactional
     public StepGoalRewardResponseDto rewardStepGoal(StepGoalRewardRequestDto requestDto) {
         
+        log.info("걸음 목표 달성 요청: userId={}, date={}", requestDto.getUserId(), requestDto.getDate());
+        
         // 1. 중복 지급 체크 (하루에 한 번만)
-        if (isStepGoalRewardAlreadyGiven(requestDto.getUserId(), requestDto.getDate())) {
+        boolean alreadyGiven = isStepGoalRewardAlreadyGiven(requestDto.getUserId(), requestDto.getDate());
+        log.info("중복 지급 체크 결과: alreadyGiven={}", alreadyGiven);
+        
+        if (alreadyGiven) {
             return StepGoalRewardResponseDto.builder()
                     .goalId(1L) // Mock goal ID
                     .goalSteps(getUserStepGoal(requestDto.getUserId()))
@@ -138,24 +147,37 @@ public class PointService {
                     .build();
         }
         
-        // 4. 포인트 지급
+        // 4. 포인트 지급 (중복 방지)
         Integer pointsToAward = STEP_GOAL_POINTS;
-        addPoints(
-            requestDto.getUserId(), 
-            pointsToAward, 
-            PointHistory.PointReason.STEP_GOAL, 
-            null, 
-            1L // 기본 Quest ID 설정
-        );
-        
-        return StepGoalRewardResponseDto.builder()
-                .goalId(1L) // Mock goal ID
-                .goalSteps(goalSteps)
-                .currentSteps(currentSteps)
-                .goalAchieved(true)
-                .pointsAwarded(pointsToAward)
-                .message("목표를 달성하여 " + pointsToAward + "포인트가 지급되었습니다.")
-                .build();
+        try {
+            addPoints(
+                requestDto.getUserId(), 
+                pointsToAward, 
+                PointHistory.PointReason.STEP_GOAL, 
+                null, 
+                1L, // 기본 Quest ID 설정
+                requestDto.getDate() // 요청 날짜를 rewardDate로 사용
+            );
+            
+            return StepGoalRewardResponseDto.builder()
+                    .goalId(1L) // Mock goal ID
+                    .goalSteps(goalSteps)
+                    .currentSteps(currentSteps)
+                    .goalAchieved(true)
+                    .pointsAwarded(pointsToAward)
+                    .message("목표를 달성하여 " + pointsToAward + "포인트가 지급되었습니다.")
+                    .build();
+        } catch (DataIntegrityViolationException e) {
+            // 중복 지급 시도 시 이미 지급된 것으로 처리
+            return StepGoalRewardResponseDto.builder()
+                    .goalId(1L) // Mock goal ID
+                    .goalSteps(goalSteps)
+                    .currentSteps(currentSteps)
+                    .goalAchieved(true)
+                    .pointsAwarded(0)
+                    .message("오늘 이미 걸음 목표 달성 포인트를 받았습니다.")
+                    .build();
+        }
     }
     
     /**

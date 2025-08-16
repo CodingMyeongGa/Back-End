@@ -94,7 +94,8 @@ public class StoreVisitService {
             VISIT_POINTS, 
             PointHistory.PointReason.STORE_VISIT, 
             savedVisit.getVisitId(), 
-            null
+            null,
+            LocalDate.now() // 방문 날짜
         );
         
         return StoreVisitTestResponseDto.builder()
@@ -252,7 +253,8 @@ public class StoreVisitService {
             VISIT_POINTS, 
             PointHistory.PointReason.STORE_VISIT, 
             savedVisit.getVisitId(), 
-            null
+            null,
+            LocalDate.now() // 방문 날짜
         );
         
         return LocationResponseDto.builder()

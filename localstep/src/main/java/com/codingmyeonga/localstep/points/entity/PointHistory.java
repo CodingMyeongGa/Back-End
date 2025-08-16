@@ -10,9 +10,12 @@ import com.codingmyeonga.localstep.users.entity.StoreVisit;
 import com.codingmyeonga.localstep.users.entity.Quest;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "point_history")
+@Table(name = "point_history", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"user_id", "reason", "reward_date"}, name = "uk_user_reason_reward_date")
+})
 @Getter
 @Builder
 @NoArgsConstructor
@@ -42,6 +45,9 @@ public class PointHistory {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+    
+    @Column(name = "reward_date", nullable = false)
+    private LocalDate rewardDate;
 
     // 연관관계 매핑 
     @ManyToOne(fetch = FetchType.LAZY)

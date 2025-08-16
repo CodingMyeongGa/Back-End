@@ -30,9 +30,9 @@ public interface PointHistoryRepository extends JpaRepository<PointHistory, Long
             @Param("startDateTime") LocalDateTime startDateTime, 
             @Param("endDateTime") LocalDateTime endDateTime);
     
-    // 특정 날짜에 걸음 목표 달성 포인트가 이미 지급되었는지 확인 (H2 호환)
+    // 특정 날짜에 걸음 목표 달성 포인트가 이미 지급되었는지 확인
     @Query("SELECT COUNT(ph) > 0 FROM PointHistory ph WHERE ph.userId = :userId " +
            "AND ph.reason = 'STEP_GOAL' " +
-           "AND CAST(ph.createdAt AS DATE) = :date")
+           "AND ph.rewardDate = :date")
     boolean existsStepGoalRewardByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 }
