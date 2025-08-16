@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.codingmyeonga.localstep.auth.entity.User;
+import com.codingmyeonga.localstep.routes.entity.Route;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -44,13 +46,13 @@ public class StoreVisit {
     private Integer pointsAwarded;
 
     // 연관관계 매핑 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    // private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "route_id", insertable = false, updatable = false)
-    // private Route route;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "route_id", insertable = false, updatable = false)
+    private Route route;
 
     // @ManyToOne(fetch = FetchType.LAZY)
     // @JoinColumn(name = "store_id", insertable = false, updatable = false)

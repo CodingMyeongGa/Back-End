@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.codingmyeonga.localstep.auth.entity.User;
+import com.codingmyeonga.localstep.steps.entity.StepsEntity;
 
 import java.time.LocalDateTime;
 
@@ -41,17 +43,13 @@ public class Quest {
     private Integer rewardPoints;
 
     // 연관관계 매핑 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    // private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "goal_id", insertable = false, updatable = false)
-    // private GoalSteps goalSteps;
-
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "target_store_id", insertable = false, updatable = false)
-    // private Store targetStore;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "goal_id", insertable = false, updatable = false)
+    private StepsEntity goalSteps;
 
     public enum QuestType {
         STORE_VISIT,

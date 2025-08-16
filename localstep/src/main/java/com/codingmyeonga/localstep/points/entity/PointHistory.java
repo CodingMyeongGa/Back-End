@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.codingmyeonga.localstep.auth.entity.User;
+import com.codingmyeonga.localstep.users.entity.StoreVisit;
+import com.codingmyeonga.localstep.users.entity.Quest;
 
 import java.time.LocalDateTime;
 
@@ -41,17 +44,17 @@ public class PointHistory {
     private LocalDateTime createdAt;
 
     // 연관관계 매핑 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    // private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "related_visit_id", insertable = false, updatable = false)
-    // private StoreVisit relatedVisit;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "related_visit_id", insertable = false, updatable = false)
+    private StoreVisit relatedVisit;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "related_quest_id", insertable = false, updatable = false)
-    // private Quest relatedQuest;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "related_quest_id", insertable = false, updatable = false)
+    private Quest relatedQuest;
 
     public enum PointReason {
         STORE_VISIT,
