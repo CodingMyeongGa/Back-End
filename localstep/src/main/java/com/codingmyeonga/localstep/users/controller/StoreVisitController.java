@@ -36,8 +36,8 @@ public class StoreVisitController {
     @PostMapping("/location")
     public ResponseEntity<LocationResponseDto> submitLocation(@RequestBody LocationRequestDto requestDto) {
         
-        // TODO: 서비스 로직 구현
-        return ResponseEntity.ok().build();
+        LocationResponseDto response = storeVisitService.processLocationAndAutoVisit(requestDto);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/visits")

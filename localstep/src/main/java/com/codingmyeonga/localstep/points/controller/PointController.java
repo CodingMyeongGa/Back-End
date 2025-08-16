@@ -5,8 +5,10 @@ import com.codingmyeonga.localstep.points.dto.PointHistoryResponseDto;
 import com.codingmyeonga.localstep.points.service.PointService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -32,13 +34,19 @@ public class PointController {
     /**
      * 사용자의 포인트 지급/차감 내역을 조회합니다.
      * @param userId 사용자 ID
+     * @param startDate 시작 날짜 (선택사항)
+     * @param endDate 종료 날짜 (선택사항)
      * @return 포인트 히스토리 목록
      */
     @GetMapping("/{user_id}/points/history")
     public ResponseEntity<List<PointHistoryResponseDto>> getPointHistory(
-            @PathVariable("user_id") Integer userId) {
+            @PathVariable("user_id") Integer userId,
+            @RequestParam(value = "start_date", required = false) 
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(value = "end_date", required = false) 
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         
-        List<PointHistoryResponseDto> history = pointService.getPointHistory(userId);
+        List<PointHistoryResponseDto> history = pointService.getPointHistory(userId, startDate, endDate);
         return ResponseEntity.ok(history);
     }
 }

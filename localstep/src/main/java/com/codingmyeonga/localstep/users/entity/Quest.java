@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import com.codingmyeonga.localstep.auth.entity.User;
-import com.codingmyeonga.localstep.steps.entity.StepsEntity;
+import com.codingmyeonga.localstep.steps.entity.StepsEntity.Goal;
 
 import java.time.LocalDateTime;
 
@@ -49,7 +49,7 @@ public class Quest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "goal_id", insertable = false, updatable = false)
-    private StepsEntity goalSteps;
+    private Goal goalSteps;
 
     public enum QuestType {
         STORE_VISIT,
