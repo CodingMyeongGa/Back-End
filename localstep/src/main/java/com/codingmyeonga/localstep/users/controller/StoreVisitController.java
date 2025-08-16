@@ -3,8 +3,7 @@ package com.codingmyeonga.localstep.users.controller;
 import com.codingmyeonga.localstep.users.dto.LocationRequestDto;
 import com.codingmyeonga.localstep.users.dto.LocationResponseDto;
 import com.codingmyeonga.localstep.users.dto.StoreVisitResponseDto;
-import com.codingmyeonga.localstep.users.dto.StoreVisitTestRequestDto;
-import com.codingmyeonga.localstep.users.dto.StoreVisitTestResponseDto;
+
 import com.codingmyeonga.localstep.users.service.StoreVisitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -40,10 +39,6 @@ public class StoreVisitController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/visits")
-    public ResponseEntity<StoreVisitTestResponseDto> createVisitTest(@RequestBody StoreVisitTestRequestDto requestDto) {
-        
-        StoreVisitTestResponseDto response = storeVisitService.createVisit(requestDto);
-        return ResponseEntity.ok(response);
-    }
+    // 테스트용 방문 기록 생성 API (삭제됨)
+    // 실제 사용 시에는 POST /api/users/location API를 사용하세요
 }

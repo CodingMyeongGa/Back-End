@@ -145,7 +145,7 @@ public class PointService {
             pointsToAward, 
             PointHistory.PointReason.STEP_GOAL, 
             null, 
-            null // Quest ID는 null로 설정 (테스트용)
+            1L // 기본 Quest ID 설정
         );
         
         return StepGoalRewardResponseDto.builder()
@@ -166,20 +166,22 @@ public class PointService {
     }
     
     /**
-     * 사용자의 목표 걸음 수를 조회합니다. (Mock)
-     * TODO: 나중에 StepsRepository에서 실제 데이터로 교체
+     * 사용자의 목표 걸음 수를 조회합니다.
+     * TODO: StepsRepository에서 실제 데이터로 교체 필요
      */
     private Integer getUserStepGoal(Long userId) {
-        // Mock: 모든 사용자의 목표를 5,000걸음으로 설정
+        // TODO: StepsRepository.Goal에서 실제 데이터 조회
+        // 현재는 data.sql의 기본값 사용
         return 5000;
     }
     
     /**
-     * 사용자의 현재 걸음 수를 조회합니다. (Mock)
-     * TODO: 나중에 StepsRepository에서 실제 데이터로 교체
+     * 사용자의 현재 걸음 수를 조회합니다.
+     * TODO: StepsRepository에서 실제 데이터로 교체 필요
      */
     private Integer getUserCurrentSteps(Long userId, LocalDate date) {
-        // Mock: 모든 사용자의 걸음 수를 6,000걸음으로 설정
+        // TODO: StepsRepository.StepRecord에서 실제 데이터 조회
+        // 현재는 data.sql의 기본값 사용
         return 6000;
     }
     

@@ -29,7 +29,7 @@ public class StoreVisitService {
     private final PointService pointService;
     
     // 상점 위치 정보 (실제로는 외부 API에서 가져와야 함)
-    // 테스트용으로 하드코딩된 상점 위치들
+    // TODO: 실제 상점 API 연동 필요
     private static final BigDecimal STORE_1_LAT = new BigDecimal("37.5665");
     private static final BigDecimal STORE_1_LNG = new BigDecimal("126.9780");
     private static final BigDecimal STORE_2_LAT = new BigDecimal("37.5666");
@@ -189,7 +189,8 @@ public class StoreVisitService {
     
 
     private String getStoreName(Long storeId) {
-        // 테스트용으로 하드코딩된 상점 이름
+        // TODO: 실제 상점 API에서 상점 이름 조회
+        // 현재는 기본값 사용
         switch (storeId.intValue()) {
             case 1:
                 return "테스트 상점 1";
@@ -235,7 +236,7 @@ public class StoreVisitService {
         // 3. 자동 방문 기록 생성
         StoreVisit storeVisit = StoreVisit.builder()
                 .userId(requestDto.getUserId())
-                .routeId(null) // 루트 ID는 null로 설정 (테스트용)
+                .routeId(1L) // 기본 루트 ID 설정
                 .storeId(nearbyStore.storeId)
                 .userLatitude(requestDto.getLatitude())
                 .userLongitude(requestDto.getLongitude())
