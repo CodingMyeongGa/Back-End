@@ -5,6 +5,7 @@ import com.codingmyeonga.localstep.users.dto.LocationResponseDto;
 import com.codingmyeonga.localstep.users.dto.StoreVisitResponseDto;
 import com.codingmyeonga.localstep.users.dto.StoreVisitTestRequestDto;
 import com.codingmyeonga.localstep.users.dto.StoreVisitTestResponseDto;
+import com.codingmyeonga.localstep.users.service.StoreVisitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StoreVisitController {
 
+    private final StoreVisitService storeVisitService;
+
     @GetMapping("/{user_id}/visits")
     public ResponseEntity<List<StoreVisitResponseDto>> getVisits(
             @PathVariable("user_id") Integer userId,
@@ -26,8 +29,8 @@ public class StoreVisitController {
             @RequestParam(value = "end_date", required = false) 
             @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate) {
         
-        // TODO: 서비스 로직 구현
-        return ResponseEntity.ok().build();
+        List<StoreVisitResponseDto> visits = storeVisitService.getUserVisits(userId, startDate, endDate);
+        return ResponseEntity.ok(visits);
     }
 
     @PostMapping("/location")
@@ -40,7 +43,7 @@ public class StoreVisitController {
     @PostMapping("/visits")
     public ResponseEntity<StoreVisitTestResponseDto> createVisitTest(@RequestBody StoreVisitTestRequestDto requestDto) {
         
-        // TODO: 서비스 로직 구현 (테스트용 - 배포 시 삭제 예정)
-        return ResponseEntity.ok().build();
+        StoreVisitTestResponseDto response = storeVisitService.createVisit(requestDto);
+        return ResponseEntity.ok(response);
     }
 }
