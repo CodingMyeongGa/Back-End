@@ -1,7 +1,7 @@
 package com.codingmyeonga.localstep.routes.dto;
 
 import lombok.*;
-//루트 안에 포함된 상점 하나의 정보를 표현하는 DTO
+//루트 안에 포함된 상점 하나의 정보를 표현하는 DTO -- 추가구현 필요
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class StoreInRouteResponse {
     private Long route_store_id; // 루트-상점 연결 ID

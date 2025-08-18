@@ -26,8 +26,8 @@ public class ExternalMapService {
     public List<PlaceDto> searchStores(double lng, double lat, int radius) {
         // 같은 지역에 대해 다양한 카테고리로 뽑아서 풀을 키움
         String[] queries = {
-                "남가좌 카페", "남가좌 디저트", "남가좌 베이커리",
-                "남가좌 음식점", "가재울 카페", "가재울 디저트"
+                "남가좌 맛집", "남가좌 한식", "남가좌 일식", "남가좌 중식", "남가좌 카페", "남가좌 디저트",
+                "남가좌 슈퍼","남가좌 "
         };
 
         // 제목(상호명) 기준으로 중복 제거
@@ -57,20 +57,25 @@ public class ExternalMapService {
                 if (items.isArray()) {
                     for (JsonNode it : items) {
                         String title = clean(it.path("title").asText());
-                        String addr  = it.path("roadAddress").asText();
+                        String addr = it.path("roadAddress").asText();
                         if (addr == null || addr.isBlank()) addr = it.path("address").asText();
-
+                        //실제 주소에 남가좌동 들어가야 함
+//                        if (addr == null || !addr.contains("남가좌")) {
+//                            continue;
+//                        }
                         double lon = 0.0, lat2 = 0.0;
                         try {
-                            lon  = Long.parseLong(it.path("mapx").asText()) / 1e7;
+                            lon = Long.parseLong(it.path("mapx").asText()) / 1e7;
                             lat2 = Long.parseLong(it.path("mapy").asText()) / 1e7;
-                        } catch (NumberFormatException ignore) {}
+                        } catch (NumberFormatException ignore) {
+                        }
 
                         // 제목 기준 dedup
                         dedup.putIfAbsent(title, new PlaceDto(title, lat2, lon, addr));
                     }
                 }
-            } catch (Exception ignore) {}
+            } catch (Exception ignore) {
+            }
         }
 
         return new ArrayList<>(dedup.values());
