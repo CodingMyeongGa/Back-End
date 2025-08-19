@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.codingmyeonga.localstep.auth.entity.User;
+import com.codingmyeonga.localstep.steps.entity.StepsEntity.Goal;
 
 import java.time.LocalDateTime;
 
@@ -19,20 +21,20 @@ public class Quest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "quest_id")
-    private Integer questId;
+    private Long questId;
 
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "quest_type", nullable = false, length = 50)
     private QuestType questType;
 
     @Column(name = "goal_id")
-    private Integer goalId;
+    private Long goalId;
 
     @Column(name = "target_store_id")
-    private Integer targetStoreId;
+    private Long targetStoreId;
 
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
@@ -41,17 +43,13 @@ public class Quest {
     private Integer rewardPoints;
 
     // 연관관계 매핑 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    // private User user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "goal_id", insertable = false, updatable = false)
-    // private GoalSteps goalSteps;
-
-    // @ManyToOne(fetch = FetchType.LAZY)
-    // @JoinColumn(name = "target_store_id", insertable = false, updatable = false)
-    // private Store targetStore;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "goal_id", insertable = false, updatable = false)
+    private Goal goalSteps;
 
     public enum QuestType {
         STORE_VISIT,

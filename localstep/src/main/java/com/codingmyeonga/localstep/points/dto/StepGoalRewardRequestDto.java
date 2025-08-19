@@ -1,5 +1,6 @@
 package com.codingmyeonga.localstep.points.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,9 +17,11 @@ import java.time.LocalDate;
 public class StepGoalRewardRequestDto {
 
     @NotNull(message = "사용자 ID는 필수입니다.")
-    private Integer userId;
+    @JsonProperty("user_id")
+    private Long userId;
 
     @NotNull(message = "걸음 수 기록 날짜는 필수입니다.")
     @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @JsonProperty("date")
     private LocalDate date;
 }

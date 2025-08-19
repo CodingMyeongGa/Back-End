@@ -1,5 +1,6 @@
 package com.codingmyeonga.localstep.points.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +12,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PointBalanceResponseDto {
 
-    private Integer userId;
+    @JsonProperty("user_id")
+    private Long userId;
+    
+    @JsonProperty("total_points")
     private Integer totalPoints;
 }
