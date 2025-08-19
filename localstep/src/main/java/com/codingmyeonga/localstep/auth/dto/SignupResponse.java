@@ -1,8 +1,6 @@
 package com.codingmyeonga.localstep.auth.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data @NoArgsConstructor @AllArgsConstructor
 public class SignupResponse {
