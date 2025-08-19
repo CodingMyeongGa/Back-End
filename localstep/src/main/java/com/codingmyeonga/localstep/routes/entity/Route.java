@@ -28,4 +28,21 @@ public class Route {
     private LocalDateTime createdAt;
     //루트 완료 시각
     private LocalDateTime completedAt;
+    //생성자로 초기 설정
+    public Route(Long userId, Double userLat, Double userLng, Integer goalSteps) {
+        this.userId = userId;
+        this.userLat = userLat;
+        this.userLng = userLng;
+        this.goal_steps = goalSteps;
+        this.completed = false;
+        this.createdAt = LocalDateTime.now();
+    }
+    //루트 완료 처리 메서드
+    public void complete(){
+        this.completed = true;
+        this.completedAt = LocalDateTime.now();
+
+
+    }
+
 }
