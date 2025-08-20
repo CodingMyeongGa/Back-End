@@ -28,7 +28,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource)) // CORS 허용
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()     // 인증 관련 API 허용
+                        .requestMatchers("/auth/**").permitAll()     // 인증 관련 API 허용
                         .requestMatchers("/api/**").permitAll()          // 모든 API 허용 (개발/테스트용)
                         .anyRequest().authenticated()                    // 나머지는 인증 필요
                 )
