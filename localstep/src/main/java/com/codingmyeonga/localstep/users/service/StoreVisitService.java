@@ -12,6 +12,7 @@ import com.codingmyeonga.localstep.users.entity.Quest;
 import com.codingmyeonga.localstep.users.repository.StoreVisitRepository;
 import com.codingmyeonga.localstep.users.repository.QuestRepository;
 import com.codingmyeonga.localstep.auth.repository.UserRepository;
+import com.codingmyeonga.localstep.routes.repository.RouteRepository;
 import com.codingmyeonga.localstep.auth.exception.ApiException;
 import org.springframework.http.HttpStatus;
 
@@ -34,6 +35,7 @@ public class StoreVisitService {
     private final PointService pointService;
     private final QuestRepository questRepository;
     private final UserRepository userRepository;
+    private final RouteRepository routeRepository;
     
     // 루트에 포함된 상점만 인정: 팀원 구현 전까지는 어댑터를 통해 조회하도록 추상화
     private final RouteStoreLookupPort routeStoreLookupPort = new FallbackRouteStoreLookup();
@@ -52,6 +54,11 @@ public class StoreVisitService {
         // 사용자 존재 여부 확인
         if (!userRepository.existsById(requestDto.getUserId())) {
             throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 사용자입니다.");
+        }
+        
+        // 루트 존재 여부 확인
+        if (!routeRepository.existsById(requestDto.getRouteId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 루트입니다.");
         }
         
         // 1. 중복 방문 체크
@@ -225,6 +232,11 @@ public class StoreVisitService {
         // 사용자 존재 여부 확인
         if (!userRepository.existsById(requestDto.getUserId())) {
             throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 사용자입니다.");
+        }
+        
+        // 루트 존재 여부 확인
+        if (!routeRepository.existsById(requestDto.getRouteId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 루트입니다.");
         }
         
         // 1. 현재 루트의 상점 목록 조회 후, 사용자와 가장 가까운 상점 선별
