@@ -9,6 +9,11 @@ import com.codingmyeonga.localstep.points.repository.PointHistoryRepository;
 import com.codingmyeonga.localstep.steps.entity.StepsEntity.Goal;
 import com.codingmyeonga.localstep.steps.entity.StepsEntity.StepRecord;
 import com.codingmyeonga.localstep.steps.repository.GoalRepository;
+import com.codingmyeonga.localstep.users.entity.Quest;
+import com.codingmyeonga.localstep.users.repository.QuestRepository;
+import com.codingmyeonga.localstep.auth.repository.UserRepository;
+import com.codingmyeonga.localstep.auth.exception.ApiException;
+import org.springframework.http.HttpStatus;
 import com.codingmyeonga.localstep.steps.repository.StepRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,6 +36,8 @@ public class PointService {
     private final PointHistoryRepository pointHistoryRepository;
     private final GoalRepository goalRepository;
     private final StepRecordRepository stepRecordRepository;
+    private final QuestRepository questRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public void addPoints(Long userId, Integer points, PointHistory.PointReason reason, 
@@ -55,6 +62,11 @@ public class PointService {
      * @return 포인트 잔액 정보
      */
     public PointBalanceResponseDto getPointBalance(Long userId) {
+        // 사용자 존재 여부 확인
+        if (!userRepository.existsById(userId)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 사용자입니다.");
+        }
+        
         Integer totalPoints = pointHistoryRepository.calculateTotalPointsByUserId(userId);
         
         return new PointBalanceResponseDto(userId, totalPoints);
@@ -68,6 +80,11 @@ public class PointService {
      * @return 포인트 히스토리 목록
      */
     public List<PointHistoryResponseDto> getPointHistory(Long userId, LocalDate startDate, LocalDate endDate) {
+        // 사용자 존재 여부 확인
+        if (!userRepository.existsById(userId)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 사용자입니다.");
+        }
+        
         List<PointHistory> histories;
         
         if (startDate != null && endDate != null) {
@@ -169,13 +186,28 @@ public class PointService {
         // 4. 포인트 지급 (중복 방지)
         Integer pointsToAward = calculateStepGoalPoints(goalSteps);
         try {
+            // 4-1. 사용자 존재 여부 확인 (FK 에러 방지)
+            if (!userRepository.existsById(requestDto.getUserId())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 사용자입니다.");
+            }
+
+            // 4-2. 퀘스트 생성(걸음 목표 달성)
+            Quest quest = Quest.builder()
+                    .userId(requestDto.getUserId())
+                    .questType(Quest.QuestType.STEP_GOAL)
+                    .goalId(getUserGoalId(requestDto.getUserId()))
+                    .rewardPoints(pointsToAward)
+                    .build();
+            Quest savedQuest = questRepository.save(quest);
+
+            // 4-3. 포인트 지급 (퀘스트 ID 연동)
             addPoints(
                 requestDto.getUserId(), 
                 pointsToAward, 
                 PointHistory.PointReason.STEP_GOAL, 
                 null, 
-                getUserGoalId(requestDto.getUserId()), // 실제 Goal ID를 Quest ID로 사용
-                requestDto.getDate() // 요청 날짜를 rewardDate로 사용
+                savedQuest.getQuestId(),
+                requestDto.getDate()
             );
             
             return StepGoalRewardResponseDto.builder()

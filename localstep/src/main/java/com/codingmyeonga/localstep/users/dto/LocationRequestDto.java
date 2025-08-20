@@ -20,6 +20,10 @@ public class LocationRequestDto {
     @JsonProperty("user_id")
     private Long userId;
 
+    @NotNull(message = "루트 ID는 필수입니다.")
+    @JsonProperty("route_id")
+    private Long routeId;
+
     @NotNull(message = "위도는 필수입니다.")
     @JsonProperty("latitude")
     private BigDecimal latitude;
