@@ -25,3 +25,14 @@ spring:
   sql:
     init:
       mode: always
+  config:
+    import: optional:file:.env[.properties]
+
+naver:
+  maps:
+    client-id: ${NAVER_MAPS_CLIENT_ID}
+    client-secret: ${NAVER_MAPS_CLIENT_SECRET}
+
+naverdev:
+  client-id: ${NAVER_DEV_CLIENT_ID}
+  client-secret: ${NAVER_DEV_CLIENT_SECRET}
