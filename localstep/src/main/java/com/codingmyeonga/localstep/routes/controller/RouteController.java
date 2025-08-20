@@ -1,6 +1,8 @@
 package com.codingmyeonga.localstep.routes.controller;
 
 import com.codingmyeonga.localstep.routes.dto.*;
+import com.codingmyeonga.localstep.routes.service.RouteService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,43 +16,44 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/routes")
+@RequiredArgsConstructor
 public class RouteController {
+    private final RouteService routeService;
     //신규 루트 생성
     @PostMapping("/generate")
     public ResponseEntity<RouteResponse> generate(@Valid @RequestBody GenerateRouteRequest req) {
-        // TODO: 서비스 연결
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                RouteResponse.builder()
-                        .route_id(1L)
-                        .user_id(req.getUser_id())
-                        .user_lat(req.getUser_lat())
-                        .user_lng(req.getUser_lng())
-                        .goal_steps(req.getGoal_steps())
-                        .created_at(LocalDateTime.now())
-                        .is_completed(false)
-                        .stores(List.of())
-                        .build()
-        );
+        RouteResponse res = routeService.generate(req);
+        return ResponseEntity.status(201).body(res);
     }
-
+    //날짜별 조회
     @GetMapping("/user/{user_id}")
-    public ResponseEntity<List<RouteResponse>> getByDate(
-            @PathVariable("user_id") Long userId,
-            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return ResponseEntity.ok(List.of()); // TODO
-    }
+    public ResponseEntity<List<RouteResponse>> getByDate(@PathVariable("user_id") Long userId,@RequestParam("date") String dateStr) {
+        // 문자열 날짜 -> LocalDate 변환
+        LocalDate date = LocalDate.parse(dateStr);
 
+        // 서비스 호출-> 데이터 가져오기
+        List<RouteResponse> list = routeService.getByUserAndDate(userId, date);
+
+        // 200 OK와 함께 데이터 응답
+        return ResponseEntity.ok(list);
+    }
+    // 루트 완료 처리
     @PatchMapping("/{route_id}/complete")
     public ResponseEntity<RouteResponse> complete(
-            @PathVariable("route_id") Long routeId,
+            @PathVariable("route_id") Long route_id,
             @Valid @RequestBody CompleteRouteRequest req) {
-        return ResponseEntity.ok(new RouteResponse()); // TODO
+        RouteResponse res = routeService.complete(route_id);
+        return ResponseEntity.ok(res);
     }
 
-    @GetMapping("/{route_id}/store/{store_id}")
-    public ResponseEntity<StoreInRouteResponse> storeDetail(
-            @PathVariable("route_id") Long routeId,
-            @PathVariable("store_id") Long storeId) {
-        return ResponseEntity.ok(new StoreInRouteResponse()); // TODO
-    }
+    // 루트 내 상점 상세 정보
+//    @GetMapping("/{route_id}/store/{store_id}")
+//    public ResponseEntity<StoreInRouteResponse> storeDetail(
+//            @PathVariable("route_id") Long routeId,
+//            @PathVariable("store_id") Long storeId) {
+//
+//        StoreInRouteResponse res = routeService.getStoreDetail(routeId, storeId);
+//        return ResponseEntity.ok(res);
+//    }
+
 }
