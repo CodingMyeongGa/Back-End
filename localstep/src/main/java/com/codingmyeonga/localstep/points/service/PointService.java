@@ -6,6 +6,10 @@ import com.codingmyeonga.localstep.points.dto.StepGoalRewardRequestDto;
 import com.codingmyeonga.localstep.points.dto.StepGoalRewardResponseDto;
 import com.codingmyeonga.localstep.points.entity.PointHistory;
 import com.codingmyeonga.localstep.points.repository.PointHistoryRepository;
+import com.codingmyeonga.localstep.steps.entity.StepsEntity.Goal;
+import com.codingmyeonga.localstep.steps.entity.StepsEntity.StepRecord;
+import com.codingmyeonga.localstep.steps.repository.GoalRepository;
+import com.codingmyeonga.localstep.steps.repository.StepRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +29,8 @@ import java.util.stream.Collectors;
 public class PointService {
 
     private final PointHistoryRepository pointHistoryRepository;
+    private final GoalRepository goalRepository;
+    private final StepRecordRepository stepRecordRepository;
 
     @Transactional
     public void addPoints(Long userId, Integer points, PointHistory.PointReason reason, 
@@ -120,7 +127,7 @@ public class PointService {
         
         if (alreadyGiven) {
             return StepGoalRewardResponseDto.builder()
-                    .goalId(1L) // Mock goal ID
+                    .goalId(getUserGoalId(requestDto.getUserId()))
                     .goalSteps(getUserStepGoal(requestDto.getUserId()))
                     .currentSteps(getUserCurrentSteps(requestDto.getUserId(), requestDto.getDate()))
                     .goalAchieved(true)
@@ -129,16 +136,28 @@ public class PointService {
                     .build();
         }
         
-        // 2. 사용자의 걸음 수와 목표 조회 (Mock)
+        // 2. 사용자의 걸음 수와 목표 조회
         Integer currentSteps = getUserCurrentSteps(requestDto.getUserId(), requestDto.getDate());
         Integer goalSteps = getUserStepGoal(requestDto.getUserId());
+        
+        // 목표가 설정되지 않은 경우 처리
+        if (goalSteps == 0) {
+            return StepGoalRewardResponseDto.builder()
+                    .goalId(null)
+                    .goalSteps(0)
+                    .currentSteps(currentSteps)
+                    .goalAchieved(false)
+                    .pointsAwarded(0)
+                    .message("걸음 목표가 설정되지 않았습니다.")
+                    .build();
+        }
         
         // 3. 목표 달성 여부 확인
         boolean goalAchieved = currentSteps >= goalSteps;
         
         if (!goalAchieved) {
             return StepGoalRewardResponseDto.builder()
-                    .goalId(1L) // Mock goal ID
+                    .goalId(getUserGoalId(requestDto.getUserId()))
                     .goalSteps(goalSteps)
                     .currentSteps(currentSteps)
                     .goalAchieved(false)
@@ -148,19 +167,19 @@ public class PointService {
         }
         
         // 4. 포인트 지급 (중복 방지)
-        Integer pointsToAward = STEP_GOAL_POINTS;
+        Integer pointsToAward = calculateStepGoalPoints(goalSteps);
         try {
             addPoints(
                 requestDto.getUserId(), 
                 pointsToAward, 
                 PointHistory.PointReason.STEP_GOAL, 
                 null, 
-                1L, // 기본 Quest ID 설정
+                getUserGoalId(requestDto.getUserId()), // 실제 Goal ID를 Quest ID로 사용
                 requestDto.getDate() // 요청 날짜를 rewardDate로 사용
             );
             
             return StepGoalRewardResponseDto.builder()
-                    .goalId(1L) // Mock goal ID
+                    .goalId(getUserGoalId(requestDto.getUserId()))
                     .goalSteps(goalSteps)
                     .currentSteps(currentSteps)
                     .goalAchieved(true)
@@ -170,7 +189,7 @@ public class PointService {
         } catch (DataIntegrityViolationException e) {
             // 중복 지급 시도 시 이미 지급된 것으로 처리
             return StepGoalRewardResponseDto.builder()
-                    .goalId(1L) // Mock goal ID
+                    .goalId(getUserGoalId(requestDto.getUserId()))
                     .goalSteps(goalSteps)
                     .currentSteps(currentSteps)
                     .goalAchieved(true)
@@ -189,24 +208,33 @@ public class PointService {
     
     /**
      * 사용자의 목표 걸음 수를 조회합니다.
-     * TODO: StepsRepository에서 실제 데이터로 교체 필요
      */
     private Integer getUserStepGoal(Long userId) {
-        // TODO: StepsRepository.Goal에서 실제 데이터 조회
-        // 현재는 data.sql의 기본값 사용
-        return 5000;
+        Optional<Goal> goal = goalRepository.findTopByUserIdOrderBySetDateDesc(userId);
+        return goal.map(Goal::getGoalSteps).orElse(0);
     }
     
     /**
      * 사용자의 현재 걸음 수를 조회합니다.
-     * TODO: StepsRepository에서 실제 데이터로 교체 필요
      */
     private Integer getUserCurrentSteps(Long userId, LocalDate date) {
-        // TODO: StepsRepository.StepRecord에서 실제 데이터 조회
-        // 현재는 data.sql의 기본값 사용
-        return 6000;
+        Optional<StepRecord> record = stepRecordRepository.findByUserIdAndDate(userId, date);
+        return record.map(StepRecord::getCurrentSteps).orElse(0);
     }
     
-    // 걸음 목표 달성 시 지급할 포인트
-    private static final Integer STEP_GOAL_POINTS = 500;
+    /**
+     * 사용자의 목표 ID를 조회합니다.
+     */
+    private Long getUserGoalId(Long userId) {
+        Optional<Goal> goal = goalRepository.findTopByUserIdOrderBySetDateDesc(userId);
+        return goal.map(Goal::getGoalId).orElse(null);
+    }
+    
+    /**
+     * 목표 걸음 수에 따른 포인트를 계산합니다.
+     * 목표 걸음 수의 10% (1의자리 버림)
+     */
+    private Integer calculateStepGoalPoints(Integer goalSteps) {
+        return (goalSteps / 10); // 목표 걸음 수의 10% (1의자리 버림)
+    }
 }

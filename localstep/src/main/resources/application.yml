@@ -25,3 +25,7 @@ spring:
   sql:
     init:
       mode: always
+
+jwt:
+  secret: your-very-secure-and-long-secret-key-1234567890
+  expiration-ms: 3600000  # 1시간
