@@ -238,7 +238,7 @@ public class StoreVisitService {
                     .storeId(null)
                     .visitId(null)
                     .pointsAwarded(0)
-                    .message("근처에 방문 가능한 상점이 없습니다.")
+                    .message("상점 방문이 감지되지 않아 포인트가 지급되지 않았습니다.")
                     .build();
         }
         
