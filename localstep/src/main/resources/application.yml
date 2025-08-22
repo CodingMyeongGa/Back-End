@@ -41,8 +41,20 @@ jwt:
   secret: ${JWT_SECRET:your-very-secure-and-long-secret-key-1234567890}
   expiration-ms: ${JWT_EXPIRATION_MS:3600000}
 
+
+# Swagger/OpenAPI 설정
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui/index.html
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+
 kakao:
   client-id: "42751a9b7d932eac24627939d11d3120"
   redirect-uri: "http://43.201.15.212/api/auth/kakao"
   token-uri: "https://kauth.kakao.com/oauth/token"
   user-info-uri: "https://kapi.kakao.com/v2/user/me"
+

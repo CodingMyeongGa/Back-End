@@ -10,4 +10,9 @@ import java.util.Optional;
 public interface RouteStoreRepository extends JpaRepository<RouteStore, Long> {
     Optional<RouteStore> findByRouteIdAndOrderInRoute(Long routeId, Integer orderInRoute);
     List<RouteStore> findAllByRouteIdOrderByOrderInRouteAsc(Long routeId);
+    
+    // StoreVisitService에서 사용할 메서드들
+    RouteStore findByRoute_IdAndStoreId(Long routeId, Long storeId);
+    RouteStore findByRoute_IdAndId(Long routeId, Long id);
+    List<RouteStore> findByRoute_Id(Long routeId);
 }

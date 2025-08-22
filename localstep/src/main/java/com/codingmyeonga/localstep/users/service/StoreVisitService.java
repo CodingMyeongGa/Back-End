@@ -13,6 +13,8 @@ import com.codingmyeonga.localstep.users.repository.StoreVisitRepository;
 import com.codingmyeonga.localstep.users.repository.QuestRepository;
 import com.codingmyeonga.localstep.auth.repository.UserRepository;
 import com.codingmyeonga.localstep.routes.repository.RouteRepository;
+import com.codingmyeonga.localstep.routes.repository.RouteStoreRepository;
+import com.codingmyeonga.localstep.routes.entity.RouteStore;
 import com.codingmyeonga.localstep.auth.exception.ApiException;
 import org.springframework.http.HttpStatus;
 
@@ -36,15 +38,13 @@ public class StoreVisitService {
     private final QuestRepository questRepository;
     private final UserRepository userRepository;
     private final RouteRepository routeRepository;
-    
-    // 루트에 포함된 상점만 인정: 팀원 구현 전까지는 어댑터를 통해 조회하도록 추상화
-    private final RouteStoreLookupPort routeStoreLookupPort = new FallbackRouteStoreLookup();
+    private final RouteStoreRepository routeStoreRepository;
     
     // 방문 시 지급할 포인트
     private static final Integer VISIT_POINTS = 100;
     
     // 상점 근처 기준 반경 (미터)
-    private static final double NEARBY_RADIUS_METERS = 50.0;
+    private static final double NEARBY_RADIUS_METERS = 50.0; // 50m
     
 
 
@@ -133,7 +133,13 @@ public class StoreVisitService {
     }
     
     private StoreLocation getStoreLocationFromRouteByStoreId(Long routeId, Long storeId) {
-        return routeStoreLookupPort.findStoreInRouteByStoreId(routeId, storeId);
+        RouteStore routeStore = routeStoreRepository.findByRoute_IdAndStoreId(routeId, storeId);
+        if (routeStore == null) {
+            return null;
+        }
+        return new StoreLocation(routeStore.getId(), // rs.getStoreId() 대신 rs.getId() 사용
+                               BigDecimal.valueOf(routeStore.getStoreLat()), 
+                               BigDecimal.valueOf(routeStore.getStoreLng()));
     }
     
     private boolean isUserNearStore(BigDecimal userLat, BigDecimal userLng, 
@@ -198,28 +204,33 @@ public class StoreVisitService {
     
 
     private StoreVisitResponseDto convertToResponseDto(StoreVisit visit) {
+        // 실제 RouteStore에서 상점 이름 가져오기
+        String storeName = getStoreNameFromRouteStore(visit.getStoreId());
+        
         return StoreVisitResponseDto.builder()
                 .visitId(visit.getVisitId())
                 .storeId(visit.getStoreId())
-                .storeName(getStoreName(visit.getStoreId())) // 상점 이름 가져오기
+                .storeName(storeName)
                 .visitedAt(visit.getVisitedAt())
                 .pointsAwarded(visit.getPointsAwarded())
                 .build();
     }
     
 
-    private String getStoreName(Long storeId) {
-        // TODO: 실제 상점 API에서 상점 이름 조회
-        // 현재는 기본값 사용
-        switch (storeId.intValue()) {
-            case 1:
-                return "테스트 상점 1";
-            case 2:
-                return "테스트 상점 2";
-            default:
-                return "알 수 없는 상점";
+    private String getStoreNameFromRouteStore(Long routeStoreId) {
+        try {
+            // routeStoreId는 실제로 RouteStore의 id (route_store_id)
+            RouteStore routeStore = routeStoreRepository.findById(routeStoreId).orElse(null);
+            if (routeStore != null) {
+                return routeStore.getStoreName();
+            }
+        } catch (Exception e) {
+            System.out.println("Error getting store name for routeStoreId: " + routeStoreId + ", Error: " + e.getMessage());
         }
+        return "알 수 없는 상점";
     }
+    
+
     
     /**
      * 사용자의 위치를 받아서 근처 상점을 확인하고 자동 방문을 처리합니다.
@@ -312,28 +323,55 @@ public class StoreVisitService {
      * @return 근처 상점 정보 (없으면 null)
      */
     private StoreLocation findNearbyStoreInRoute(Long routeId, BigDecimal userLat, BigDecimal userLng) {
-        List<StoreLocation> stores = routeStoreLookupPort.findStoresInRoute(routeId);
+        List<RouteStore> routeStores = routeStoreRepository.findByRoute_Id(routeId);
+        System.out.println("=== DEBUG: findNearbyStoreInRoute ===");
+        System.out.println("RouteId: " + routeId);
+        System.out.println("User location: " + userLat + ", " + userLng);
+        System.out.println("Found " + routeStores.size() + " stores in route");
+        
         StoreLocation best = null;
         double bestDist = Double.MAX_VALUE;
-        for (StoreLocation s : stores) {
-            if (s.latitude == null || s.longitude == null) continue;
+        for (RouteStore rs : routeStores) {
+            System.out.println("Checking store: ID=" + rs.getStoreId() + 
+                             ", Name=" + rs.getStoreName() + 
+                             ", Lat=" + rs.getStoreLat() + 
+                             ", Lng=" + rs.getStoreLng());
+            
+            if (rs.getStoreLat() == null || rs.getStoreLng() == null) {
+                System.out.println("Skipping store due to null coordinates");
+                continue;
+            }
+            
             double d = calculateDistance(
                     userLat.doubleValue(), userLng.doubleValue(),
-                    s.latitude.doubleValue(), s.longitude.doubleValue()
+                    rs.getStoreLat(), rs.getStoreLng()
             );
-            if (d <= NEARBY_RADIUS_METERS && d < bestDist) {
-                best = s;
-                bestDist = d;
-            }
+            System.out.println("Distance to store: " + d + " meters");
+            
+                         if (d <= NEARBY_RADIUS_METERS && d < bestDist) {
+                 best = new StoreLocation(rs.getId(), // rs.getStoreId() 대신 rs.getId() 사용
+                                        BigDecimal.valueOf(rs.getStoreLat()), 
+                                        BigDecimal.valueOf(rs.getStoreLng()));
+                 bestDist = d;
+                 System.out.println("Found nearby store! Distance: " + d + " meters");
+             }
         }
+        
+        if (best == null) {
+            System.out.println("No nearby store found");
+        } else {
+            System.out.println("Best store found: ID=" + best.storeId + ", Distance=" + bestDist + " meters");
+        }
+        System.out.println("=== END DEBUG ===");
+        
         return best;
     }
     
     // 상점 위치 정보를 담는 내부 클래스
     private static class StoreLocation {
-        private final Long storeId; // store_id 저장
-        private final BigDecimal latitude; // store_lat
-        private final BigDecimal longitude; // store_lng
+        public final Long storeId; // store_id 저장
+        public final BigDecimal latitude; // store_lat
+        public final BigDecimal longitude; // store_lng
         private StoreLocation(Long storeId, BigDecimal latitude, BigDecimal longitude) {
             this.storeId = storeId;
             this.latitude = latitude;
@@ -341,23 +379,6 @@ public class StoreVisitService {
         }
     }
 
-    /**
-     * 팀원 구현 전까지의 임시 포트/어댑터. 팀원 코드가 추가되면 이 구현만 대체하면 됨.
-     */
-    private interface RouteStoreLookupPort {
-        StoreLocation findStoreInRouteByStoreId(Long routeId, Long storeId);
-        List<StoreLocation> findStoresInRoute(Long routeId);
-    }
 
-    private static class FallbackRouteStoreLookup implements RouteStoreLookupPort {
-        @Override
-        public StoreLocation findStoreInRouteByStoreId(Long routeId, Long storeId) {
-            return null; // 아직 DB 연동 전: 존재하지 않는 것으로 처리
-        }
-
-        @Override
-        public List<StoreLocation> findStoresInRoute(Long routeId) {
-            return List.of(); // 아직 DB 연동 전: 빈 목록
-        }
-    }
 }
+
