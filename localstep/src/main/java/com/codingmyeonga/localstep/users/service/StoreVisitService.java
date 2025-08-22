@@ -137,7 +137,7 @@ public class StoreVisitService {
         if (routeStore == null) {
             return null;
         }
-        return new StoreLocation(routeStore.getStoreId(), 
+        return new StoreLocation(routeStore.getId(), // rs.getStoreId() 대신 rs.getId() 사용
                                BigDecimal.valueOf(routeStore.getStoreLat()), 
                                BigDecimal.valueOf(routeStore.getStoreLng()));
     }
@@ -204,28 +204,33 @@ public class StoreVisitService {
     
 
     private StoreVisitResponseDto convertToResponseDto(StoreVisit visit) {
+        // 실제 RouteStore에서 상점 이름 가져오기
+        String storeName = getStoreNameFromRouteStore(visit.getStoreId());
+        
         return StoreVisitResponseDto.builder()
                 .visitId(visit.getVisitId())
                 .storeId(visit.getStoreId())
-                .storeName(getStoreName(visit.getStoreId())) // 상점 이름 가져오기
+                .storeName(storeName)
                 .visitedAt(visit.getVisitedAt())
                 .pointsAwarded(visit.getPointsAwarded())
                 .build();
     }
     
 
-    private String getStoreName(Long storeId) {
-        // TODO: 실제 상점 API에서 상점 이름 조회
-        // 현재는 기본값 사용
-        switch (storeId.intValue()) {
-            case 1:
-                return "테스트 상점 1";
-            case 2:
-                return "테스트 상점 2";
-            default:
-                return "알 수 없는 상점";
+    private String getStoreNameFromRouteStore(Long routeStoreId) {
+        try {
+            // routeStoreId는 실제로 RouteStore의 id (route_store_id)
+            RouteStore routeStore = routeStoreRepository.findById(routeStoreId).orElse(null);
+            if (routeStore != null) {
+                return routeStore.getStoreName();
+            }
+        } catch (Exception e) {
+            System.out.println("Error getting store name for routeStoreId: " + routeStoreId + ", Error: " + e.getMessage());
         }
+        return "알 수 없는 상점";
     }
+    
+
     
     /**
      * 사용자의 위치를 받아서 근처 상점을 확인하고 자동 방문을 처리합니다.
@@ -343,13 +348,13 @@ public class StoreVisitService {
             );
             System.out.println("Distance to store: " + d + " meters");
             
-            if (d <= NEARBY_RADIUS_METERS && d < bestDist) {
-                best = new StoreLocation(rs.getStoreId(), 
-                                       BigDecimal.valueOf(rs.getStoreLat()), 
-                                       BigDecimal.valueOf(rs.getStoreLng()));
-                bestDist = d;
-                System.out.println("Found nearby store! Distance: " + d + " meters");
-            }
+                         if (d <= NEARBY_RADIUS_METERS && d < bestDist) {
+                 best = new StoreLocation(rs.getId(), // rs.getStoreId() 대신 rs.getId() 사용
+                                        BigDecimal.valueOf(rs.getStoreLat()), 
+                                        BigDecimal.valueOf(rs.getStoreLng()));
+                 bestDist = d;
+                 System.out.println("Found nearby store! Distance: " + d + " meters");
+             }
         }
         
         if (best == null) {
