@@ -35,6 +35,11 @@ public class StepsController {
     public ResponseEntity<GoalResponse> getGoal(@PathVariable("user_id") Long userId) {
         return ResponseEntity.ok(stepsService.getGoal(userId));
     }
+    
+    @GetMapping("/goal")
+    public ResponseEntity<GoalResponse> getGoalDefault(@RequestParam("user_id") Long userId) {
+        return ResponseEntity.ok(stepsService.getGoal(userId));
+    }
 
     @GetMapping("/history/{user_id}")
     public ResponseEntity<HistoryResponse> getHistory(@PathVariable("user_id") Long userId,

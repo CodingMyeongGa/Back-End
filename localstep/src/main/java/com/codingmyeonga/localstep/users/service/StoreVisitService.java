@@ -8,7 +8,13 @@ import com.codingmyeonga.localstep.users.dto.StoreVisitResponseDto;
 import com.codingmyeonga.localstep.users.dto.StoreVisitTestRequestDto;
 import com.codingmyeonga.localstep.users.dto.StoreVisitTestResponseDto;
 import com.codingmyeonga.localstep.users.entity.StoreVisit;
+import com.codingmyeonga.localstep.users.entity.Quest;
 import com.codingmyeonga.localstep.users.repository.StoreVisitRepository;
+import com.codingmyeonga.localstep.users.repository.QuestRepository;
+import com.codingmyeonga.localstep.auth.repository.UserRepository;
+import com.codingmyeonga.localstep.routes.repository.RouteRepository;
+import com.codingmyeonga.localstep.auth.exception.ApiException;
+import org.springframework.http.HttpStatus;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,13 +33,12 @@ public class StoreVisitService {
 
     private final StoreVisitRepository storeVisitRepository;
     private final PointService pointService;
+    private final QuestRepository questRepository;
+    private final UserRepository userRepository;
+    private final RouteRepository routeRepository;
     
-    // 상점 위치 정보 (실제로는 외부 API에서 가져와야 함)
-    // TODO: 실제 상점 API 연동 필요
-    private static final BigDecimal STORE_1_LAT = new BigDecimal("37.5665");
-    private static final BigDecimal STORE_1_LNG = new BigDecimal("126.9780");
-    private static final BigDecimal STORE_2_LAT = new BigDecimal("37.5666");
-    private static final BigDecimal STORE_2_LNG = new BigDecimal("126.9781");
+    // 루트에 포함된 상점만 인정: 팀원 구현 전까지는 어댑터를 통해 조회하도록 추상화
+    private final RouteStoreLookupPort routeStoreLookupPort = new FallbackRouteStoreLookup();
     
     // 방문 시 지급할 포인트
     private static final Integer VISIT_POINTS = 100;
@@ -46,8 +51,18 @@ public class StoreVisitService {
     @Transactional
     public StoreVisitTestResponseDto createVisit(StoreVisitTestRequestDto requestDto) {
         
+        // 사용자 존재 여부 확인
+        if (!userRepository.existsById(requestDto.getUserId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 사용자입니다.");
+        }
+        
+        // 루트 존재 여부 확인
+        if (!routeRepository.existsById(requestDto.getRouteId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 루트입니다.");
+        }
+        
         // 1. 중복 방문 체크
-        if (isDuplicateVisit(requestDto.getUserId(), requestDto.getStoreId())) {
+        if (isDuplicateVisit(requestDto.getUserId(), requestDto.getRouteId(), requestDto.getStoreId())) {
             return StoreVisitTestResponseDto.builder()
                     .visitId(null)
                     .pointsAwarded(0)
@@ -55,8 +70,8 @@ public class StoreVisitService {
                     .build();
         }
         
-        // 2. 상점 위치 가져오기 (실제로는 외부 API 호출)
-        StoreLocation storeLocation = getStoreLocation(requestDto.getStoreId());
+        // 2. 상점 위치 가져오기 (루트에 포함된 상점만 인정) - store_id 기준
+        StoreLocation storeLocation = getStoreLocationFromRouteByStoreId(requestDto.getRouteId(), requestDto.getStoreId());
         if (storeLocation == null) {
             return StoreVisitTestResponseDto.builder()
                     .visitId(null)
@@ -88,14 +103,22 @@ public class StoreVisitService {
         
         StoreVisit savedVisit = storeVisitRepository.save(storeVisit);
         
-        // 5. 포인트 지급
+        // 5. 퀘스트 생성 및 포인트 지급 연동
+        Quest quest = Quest.builder()
+                .userId(requestDto.getUserId())
+                .questType(Quest.QuestType.STORE_VISIT)
+                .targetStoreId(requestDto.getStoreId())
+                .rewardPoints(VISIT_POINTS)
+                .build();
+        Quest savedQuest = questRepository.save(quest);
+
         pointService.addPoints(
             requestDto.getUserId().longValue(), 
             VISIT_POINTS, 
             PointHistory.PointReason.STORE_VISIT, 
             savedVisit.getVisitId(), 
-            null,
-            LocalDate.now() // 방문 날짜
+            savedQuest.getQuestId(),
+            LocalDate.now()
         );
         
         return StoreVisitTestResponseDto.builder()
@@ -105,21 +128,12 @@ public class StoreVisitService {
                 .build();
     }
     
-    private boolean isDuplicateVisit(Long userId, Long storeId) {
-        return storeVisitRepository.existsByUserIdAndStoreId(userId, storeId);
+    private boolean isDuplicateVisit(Long userId, Long routeId, Long storeId) {
+        return storeVisitRepository.existsByUserIdAndRouteIdAndStoreId(userId, routeId, storeId);
     }
     
-    private StoreLocation getStoreLocation(Long storeId) {
-        // 실제로는 외부 API에서 상점 정보를 가져와야 함
-        // 테스트용으로 하드코딩된 위치 반환
-        switch (storeId.intValue()) {
-            case 1:
-                return new StoreLocation(1L, STORE_1_LAT, STORE_1_LNG);
-            case 2:
-                return new StoreLocation(2L, STORE_2_LAT, STORE_2_LNG);
-            default:
-                return null;
-        }
+    private StoreLocation getStoreLocationFromRouteByStoreId(Long routeId, Long storeId) {
+        return routeStoreLookupPort.findStoreInRouteByStoreId(routeId, storeId);
     }
     
     private boolean isUserNearStore(BigDecimal userLat, BigDecimal userLng, 
@@ -156,6 +170,11 @@ public class StoreVisitService {
      * @return 방문 기록 목록
      */
     public List<StoreVisitResponseDto> getUserVisits(Long userId, LocalDate startDate, LocalDate endDate) {
+        // 사용자 존재 여부 확인
+        if (!userRepository.existsById(userId)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 사용자입니다.");
+        }
+        
         // 날짜 범위 설정
         LocalDateTime startDateTime = null;
         LocalDateTime endDateTime = null;
@@ -210,8 +229,20 @@ public class StoreVisitService {
     @Transactional
     public LocationResponseDto processLocationAndAutoVisit(LocationRequestDto requestDto) {
         
-        // 1. 근처 상점 찾기
-        StoreLocation nearbyStore = findNearbyStore(requestDto.getLatitude(), requestDto.getLongitude());
+        // 사용자 존재 여부 확인
+        if (!userRepository.existsById(requestDto.getUserId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 사용자입니다.");
+        }
+        
+        // 루트 존재 여부 확인
+        if (!routeRepository.existsById(requestDto.getRouteId())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST.value(), "존재하지 않는 루트입니다.");
+        }
+        
+        // 1. 현재 루트의 상점 목록 조회 후, 사용자와 가장 가까운 상점 선별
+        StoreLocation nearbyStore = findNearbyStoreInRoute(
+                requestDto.getRouteId(), requestDto.getLatitude(), requestDto.getLongitude()
+        );
         
         if (nearbyStore == null) {
             return LocationResponseDto.builder()
@@ -219,12 +250,12 @@ public class StoreVisitService {
                     .storeId(null)
                     .visitId(null)
                     .pointsAwarded(0)
-                    .message("근처에 방문 가능한 상점이 없습니다.")
+                    .message("상점 방문이 감지되지 않아 포인트가 지급되지 않았습니다.")
                     .build();
         }
         
-        // 2. 중복 방문 체크
-        if (isDuplicateVisit(requestDto.getUserId(), nearbyStore.storeId)) {
+        // 2. 중복 방문 체크 (userId, routeId, storeId)
+        if (isDuplicateVisit(requestDto.getUserId(), requestDto.getRouteId(), nearbyStore.storeId)) {
             return LocationResponseDto.builder()
                     .nearbyStoreDetected(true)
                     .storeId(nearbyStore.storeId)
@@ -234,11 +265,11 @@ public class StoreVisitService {
                     .build();
         }
         
-        // 3. 자동 방문 기록 생성
+        // 3. 자동 방문 기록 생성 (storeId에는 store_id 저장)
         StoreVisit storeVisit = StoreVisit.builder()
                 .userId(requestDto.getUserId())
-                .routeId(1L) // 기본 루트 ID 설정
-                .storeId(nearbyStore.storeId)
+                .routeId(requestDto.getRouteId())
+                .storeId(nearbyStore.storeId) // store_id
                 .userLatitude(requestDto.getLatitude())
                 .userLongitude(requestDto.getLongitude())
                 .visitedAt(requestDto.getTimestamp())
@@ -247,14 +278,22 @@ public class StoreVisitService {
         
         StoreVisit savedVisit = storeVisitRepository.save(storeVisit);
         
-        // 4. 포인트 지급
+        // 4. 퀘스트 생성 및 포인트 지급 연동
+        Quest quest = Quest.builder()
+                .userId(requestDto.getUserId())
+                .questType(Quest.QuestType.STORE_VISIT)
+                .targetStoreId(nearbyStore.storeId)
+                .rewardPoints(VISIT_POINTS)
+                .build();
+        Quest savedQuest = questRepository.save(quest);
+
         pointService.addPoints(
             requestDto.getUserId().longValue(), 
             VISIT_POINTS, 
             PointHistory.PointReason.STORE_VISIT, 
             savedVisit.getVisitId(), 
-            null,
-            LocalDate.now() // 방문 날짜
+            savedQuest.getQuestId(),
+            LocalDate.now()
         );
         
         return LocationResponseDto.builder()
@@ -272,33 +311,53 @@ public class StoreVisitService {
      * @param userLng 사용자 경도
      * @return 근처 상점 정보 (없으면 null)
      */
-    private StoreLocation findNearbyStore(BigDecimal userLat, BigDecimal userLng) {
-
-        // 테스트용으로 하드코딩된 상점들 중에서 검색
-        
-        // 상점 1 확인
-        if (isUserNearStore(userLat, userLng, STORE_1_LAT, STORE_1_LNG)) {
-            return new StoreLocation(1L, STORE_1_LAT, STORE_1_LNG);
+    private StoreLocation findNearbyStoreInRoute(Long routeId, BigDecimal userLat, BigDecimal userLng) {
+        List<StoreLocation> stores = routeStoreLookupPort.findStoresInRoute(routeId);
+        StoreLocation best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (StoreLocation s : stores) {
+            if (s.latitude == null || s.longitude == null) continue;
+            double d = calculateDistance(
+                    userLat.doubleValue(), userLng.doubleValue(),
+                    s.latitude.doubleValue(), s.longitude.doubleValue()
+            );
+            if (d <= NEARBY_RADIUS_METERS && d < bestDist) {
+                best = s;
+                bestDist = d;
+            }
         }
-        
-        // 상점 2 확인
-        if (isUserNearStore(userLat, userLng, STORE_2_LAT, STORE_2_LNG)) {
-            return new StoreLocation(2L, STORE_2_LAT, STORE_2_LNG);
-        }
-        
-        return null; // 근처 상점 없음
+        return best;
     }
     
     // 상점 위치 정보를 담는 내부 클래스
     private static class StoreLocation {
-        private final Long storeId;
-        private final BigDecimal latitude;
-        private final BigDecimal longitude;
-        
-        public StoreLocation(Long storeId, BigDecimal latitude, BigDecimal longitude) {
+        private final Long storeId; // store_id 저장
+        private final BigDecimal latitude; // store_lat
+        private final BigDecimal longitude; // store_lng
+        private StoreLocation(Long storeId, BigDecimal latitude, BigDecimal longitude) {
             this.storeId = storeId;
             this.latitude = latitude;
             this.longitude = longitude;
+        }
+    }
+
+    /**
+     * 팀원 구현 전까지의 임시 포트/어댑터. 팀원 코드가 추가되면 이 구현만 대체하면 됨.
+     */
+    private interface RouteStoreLookupPort {
+        StoreLocation findStoreInRouteByStoreId(Long routeId, Long storeId);
+        List<StoreLocation> findStoresInRoute(Long routeId);
+    }
+
+    private static class FallbackRouteStoreLookup implements RouteStoreLookupPort {
+        @Override
+        public StoreLocation findStoreInRouteByStoreId(Long routeId, Long storeId) {
+            return null; // 아직 DB 연동 전: 존재하지 않는 것으로 처리
+        }
+
+        @Override
+        public List<StoreLocation> findStoresInRoute(Long routeId) {
+            return List.of(); // 아직 DB 연동 전: 빈 목록
         }
     }
 }

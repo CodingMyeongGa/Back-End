@@ -13,9 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "point_history", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "reason", "reward_date"}, name = "uk_user_reason_reward_date")
-})
+@Table(name = "point_history")
 @Getter
 @Builder
 @NoArgsConstructor

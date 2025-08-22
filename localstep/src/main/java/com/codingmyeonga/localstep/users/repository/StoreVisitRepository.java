@@ -13,7 +13,7 @@ import java.util.List;
 public interface StoreVisitRepository extends JpaRepository<StoreVisit, Long> {
     
     // 중복 방문 체크를 위한 메서드
-    boolean existsByUserIdAndStoreId(Long userId, Long storeId);
+    boolean existsByUserIdAndRouteIdAndStoreId(Long userId, Long routeId, Long storeId);
     
     // 날짜 범위로 방문 기록 조회
     @Query("SELECT sv FROM StoreVisit sv WHERE sv.userId = :userId " +
