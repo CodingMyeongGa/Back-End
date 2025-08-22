@@ -44,7 +44,7 @@ public class StoreVisitService {
     private static final Integer VISIT_POINTS = 100;
     
     // 상점 근처 기준 반경 (미터)
-    private static final double NEARBY_RADIUS_METERS = 50.0;
+    private static final double NEARBY_RADIUS_METERS = 50.0; // 50m
     
 
 
@@ -133,7 +133,7 @@ public class StoreVisitService {
     }
     
     private StoreLocation getStoreLocationFromRouteByStoreId(Long routeId, Long storeId) {
-        RouteStore routeStore = routeStoreRepository.findByRouteIdAndStoreId(routeId, storeId);
+        RouteStore routeStore = routeStoreRepository.findByRoute_IdAndStoreId(routeId, storeId);
         if (routeStore == null) {
             return null;
         }
@@ -318,31 +318,55 @@ public class StoreVisitService {
      * @return 근처 상점 정보 (없으면 null)
      */
     private StoreLocation findNearbyStoreInRoute(Long routeId, BigDecimal userLat, BigDecimal userLng) {
-        List<RouteStore> routeStores = routeStoreRepository.findByRouteId(routeId);
+        List<RouteStore> routeStores = routeStoreRepository.findByRoute_Id(routeId);
+        System.out.println("=== DEBUG: findNearbyStoreInRoute ===");
+        System.out.println("RouteId: " + routeId);
+        System.out.println("User location: " + userLat + ", " + userLng);
+        System.out.println("Found " + routeStores.size() + " stores in route");
+        
         StoreLocation best = null;
         double bestDist = Double.MAX_VALUE;
         for (RouteStore rs : routeStores) {
-            if (rs.getStoreLat() == null || rs.getStoreLng() == null) continue;
+            System.out.println("Checking store: ID=" + rs.getStoreId() + 
+                             ", Name=" + rs.getStoreName() + 
+                             ", Lat=" + rs.getStoreLat() + 
+                             ", Lng=" + rs.getStoreLng());
+            
+            if (rs.getStoreLat() == null || rs.getStoreLng() == null) {
+                System.out.println("Skipping store due to null coordinates");
+                continue;
+            }
+            
             double d = calculateDistance(
                     userLat.doubleValue(), userLng.doubleValue(),
                     rs.getStoreLat(), rs.getStoreLng()
             );
+            System.out.println("Distance to store: " + d + " meters");
+            
             if (d <= NEARBY_RADIUS_METERS && d < bestDist) {
                 best = new StoreLocation(rs.getStoreId(), 
                                        BigDecimal.valueOf(rs.getStoreLat()), 
                                        BigDecimal.valueOf(rs.getStoreLng()));
                 bestDist = d;
+                System.out.println("Found nearby store! Distance: " + d + " meters");
             }
-
         }
+        
+        if (best == null) {
+            System.out.println("No nearby store found");
+        } else {
+            System.out.println("Best store found: ID=" + best.storeId + ", Distance=" + bestDist + " meters");
+        }
+        System.out.println("=== END DEBUG ===");
+        
         return best;
     }
     
     // 상점 위치 정보를 담는 내부 클래스
     private static class StoreLocation {
-        private final Long storeId; // store_id 저장
-        private final BigDecimal latitude; // store_lat
-        private final BigDecimal longitude; // store_lng
+        public final Long storeId; // store_id 저장
+        public final BigDecimal latitude; // store_lat
+        public final BigDecimal longitude; // store_lng
         private StoreLocation(Long storeId, BigDecimal latitude, BigDecimal longitude) {
             this.storeId = storeId;
             this.latitude = latitude;

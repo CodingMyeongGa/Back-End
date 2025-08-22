@@ -12,6 +12,6 @@ public interface RouteStoreRepository extends JpaRepository<RouteStore, Long> {
     List<RouteStore> findAllByRouteIdOrderByOrderInRouteAsc(Long routeId);
     
     // StoreVisitService에서 사용할 메서드들
-    RouteStore findByRouteIdAndStoreId(Long routeId, Long storeId);
-    List<RouteStore> findByRouteId(Long routeId);
+    RouteStore findByRoute_IdAndStoreId(Long routeId, Long storeId);
+    List<RouteStore> findByRoute_Id(Long routeId);
 }
