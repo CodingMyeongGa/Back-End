@@ -39,6 +39,4 @@ public class StoreVisitController {
         return ResponseEntity.ok(response);
     }
 
-    // 테스트용 방문 기록 생성 API (삭제됨)
-    // 실제 사용 시에는 POST /api/users/location API를 사용하세요
 }

@@ -13,6 +13,8 @@ import com.codingmyeonga.localstep.users.repository.StoreVisitRepository;
 import com.codingmyeonga.localstep.users.repository.QuestRepository;
 import com.codingmyeonga.localstep.auth.repository.UserRepository;
 import com.codingmyeonga.localstep.routes.repository.RouteRepository;
+import com.codingmyeonga.localstep.routes.repository.RouteStoreRepository;
+import com.codingmyeonga.localstep.routes.entity.RouteStore;
 import com.codingmyeonga.localstep.auth.exception.ApiException;
 import org.springframework.http.HttpStatus;
 
@@ -36,9 +38,7 @@ public class StoreVisitService {
     private final QuestRepository questRepository;
     private final UserRepository userRepository;
     private final RouteRepository routeRepository;
-    
-    // 루트에 포함된 상점만 인정: 팀원 구현 전까지는 어댑터를 통해 조회하도록 추상화
-    private final RouteStoreLookupPort routeStoreLookupPort = new FallbackRouteStoreLookup();
+    private final RouteStoreRepository routeStoreRepository;
     
     // 방문 시 지급할 포인트
     private static final Integer VISIT_POINTS = 100;
@@ -133,7 +133,13 @@ public class StoreVisitService {
     }
     
     private StoreLocation getStoreLocationFromRouteByStoreId(Long routeId, Long storeId) {
-        return routeStoreLookupPort.findStoreInRouteByStoreId(routeId, storeId);
+        RouteStore routeStore = routeStoreRepository.findByRouteIdAndStoreId(routeId, storeId);
+        if (routeStore == null) {
+            return null;
+        }
+        return new StoreLocation(routeStore.getStoreId(), 
+                               BigDecimal.valueOf(routeStore.getStoreLat()), 
+                               BigDecimal.valueOf(routeStore.getStoreLng()));
     }
     
     private boolean isUserNearStore(BigDecimal userLat, BigDecimal userLng, 
@@ -312,19 +318,22 @@ public class StoreVisitService {
      * @return 근처 상점 정보 (없으면 null)
      */
     private StoreLocation findNearbyStoreInRoute(Long routeId, BigDecimal userLat, BigDecimal userLng) {
-        List<StoreLocation> stores = routeStoreLookupPort.findStoresInRoute(routeId);
+        List<RouteStore> routeStores = routeStoreRepository.findByRouteId(routeId);
         StoreLocation best = null;
         double bestDist = Double.MAX_VALUE;
-        for (StoreLocation s : stores) {
-            if (s.latitude == null || s.longitude == null) continue;
+        for (RouteStore rs : routeStores) {
+            if (rs.getStoreLat() == null || rs.getStoreLng() == null) continue;
             double d = calculateDistance(
                     userLat.doubleValue(), userLng.doubleValue(),
-                    s.latitude.doubleValue(), s.longitude.doubleValue()
+                    rs.getStoreLat(), rs.getStoreLng()
             );
             if (d <= NEARBY_RADIUS_METERS && d < bestDist) {
-                best = s;
+                best = new StoreLocation(rs.getStoreId(), 
+                                       BigDecimal.valueOf(rs.getStoreLat()), 
+                                       BigDecimal.valueOf(rs.getStoreLng()));
                 bestDist = d;
             }
+
         }
         return best;
     }
@@ -341,23 +350,6 @@ public class StoreVisitService {
         }
     }
 
-    /**
-     * 팀원 구현 전까지의 임시 포트/어댑터. 팀원 코드가 추가되면 이 구현만 대체하면 됨.
-     */
-    private interface RouteStoreLookupPort {
-        StoreLocation findStoreInRouteByStoreId(Long routeId, Long storeId);
-        List<StoreLocation> findStoresInRoute(Long routeId);
-    }
 
-    private static class FallbackRouteStoreLookup implements RouteStoreLookupPort {
-        @Override
-        public StoreLocation findStoreInRouteByStoreId(Long routeId, Long storeId) {
-            return null; // 아직 DB 연동 전: 존재하지 않는 것으로 처리
-        }
-
-        @Override
-        public List<StoreLocation> findStoresInRoute(Long routeId) {
-            return List.of(); // 아직 DB 연동 전: 빈 목록
-        }
-    }
 }
+
