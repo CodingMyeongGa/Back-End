@@ -42,6 +42,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.10'
 
+
 }
 
 tasks.named('test') {
