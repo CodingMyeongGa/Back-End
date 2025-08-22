@@ -71,7 +71,19 @@ public class ExternalMapService {
                         }
 
                         // 제목 기준 dedup
-                        dedup.putIfAbsent(title, new PlaceDto(title, lat2, lon, addr));
+
+                        long fakeId = Objects.hash(title, addr);  // 간단히 id 생성
+                        String urlLink = "https://map.naver.com/v5/search/" + title;
+
+                        dedup.putIfAbsent(title, new PlaceDto(
+                                fakeId,        // store_id
+                                title,         // store_name
+                                lat2,          // store_lat
+                                lon,           // store_lng
+                                addr,          // store_address
+                                urlLink        // store_url
+                        ));
+
                     }
                 }
             } catch (Exception ignore) {

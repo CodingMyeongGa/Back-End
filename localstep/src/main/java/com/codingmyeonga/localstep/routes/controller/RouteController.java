@@ -46,14 +46,14 @@ public class RouteController {
         return ResponseEntity.ok(res);
     }
 
-    // 루트 내 상점 상세 정보
-//    @GetMapping("/{route_id}/store/{store_id}")
-//    public ResponseEntity<StoreInRouteResponse> storeDetail(
-//            @PathVariable("route_id") Long routeId,
-//            @PathVariable("store_id") Long storeId) {
-//
-//        StoreInRouteResponse res = routeService.getStoreDetail(routeId, storeId);
-//        return ResponseEntity.ok(res);
-//    }
+     //루트 내 상점 상세 정보 조회
+    @GetMapping("/{route_id}/store/{order_in_route}")
+    public ResponseEntity<StoreInRouteResponse> storeDetail(
+            @PathVariable("route_id") Long routeId,
+            @PathVariable("order_in_route") Integer storeId) {
+
+        StoreInRouteResponse res = routeService.getStoreDetail(routeId, storeId);
+        return ResponseEntity.ok(res);
+    }
 
 }
