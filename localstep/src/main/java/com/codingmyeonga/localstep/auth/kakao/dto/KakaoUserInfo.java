@@ -15,6 +15,7 @@ public class KakaoUserInfo {
         @Data
         public static class Profile {
             private String nickname;
+            private String profile_image_url;
         }
     }
 }
