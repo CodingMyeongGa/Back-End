@@ -1,0 +1,10 @@
+[33me753272[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/point-fix[m[33m, [m[1;31morigin/feature/point-fix[m[33m)[m fix: security config 오타 수정
+[33m366bb28[m fix: 데이터포맷 JSON 파싱 문제 해결
+[33m80f46fc[m fix: 상점 방문 포인트 지급 응답 명세서와 동일하게 수정
+[33me42eb9e[m feat: 상점 정보 저장 관련 구현 전까지의 임시 포트/어댑터 추가
+[33m3ceb22c[m feat: 루트 생성 코드 머지
+[33m459a6da[m[33m ([m[1;31morigin/dev[m[33m)[m Merge pull request #10 from CodingMyeongGa/feat/routes
+[33me9072b1[m feat: data.sql 비워 mock 데이터 의존성 제거
+[33mae80e48[m feat: 목표 걸음수 설정과 연동
+[33me92a6cd[m[33m ([m[1;31morigin/feat/routes[m[33m)[m 0820routes 수정
+[33mf96a5c1[m[33m ([m[1;32mdev[m[33m)[m Merge pull request #9 from CodingMyeongGa/auth
