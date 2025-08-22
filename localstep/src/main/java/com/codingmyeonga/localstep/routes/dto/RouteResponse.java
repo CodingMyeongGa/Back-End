@@ -16,5 +16,7 @@ public class RouteResponse {
     private Boolean is_completed;           // 완료 여부
     private LocalDateTime completed_at;     // 완료 시각
     private List<String> store_names; //상점 이름 리스트
+//+추가
+private List<StoreInRouteResponse> stores;
 
 }

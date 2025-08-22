@@ -156,26 +156,66 @@ public class RouteService {
         r.complete(); //완료로 변경
         return toResponse(routeRepository.save(r));
     }
-
     private RouteResponse toResponse(Route r) {
-        List<String> names = routeStoreRepository
-                .findAllByRouteIdOrderByOrderInRouteAsc(r.getId())
-                .stream()
-                .map(RouteStore::getStoreName)
-                .toList();
+        List<RouteStore> routeStores =
+                routeStoreRepository.findAllByRouteIdOrderByOrderInRouteAsc(r.getId());
 
-        return RouteResponse.builder()
-                .route_id(r.getId())
-                .user_id(r.getUserId())
-                .user_lat(r.getUserLat())
-                .user_lng(r.getUserLng())
-                .goal_steps(r.getGoal_steps())
-                .is_completed(Boolean.TRUE.equals(r.getCompleted()))
-                .created_at(r.getCreatedAt())
-                .completed_at(r.getCompletedAt())
-                .store_names(names)
-                .build();
+        List<String> names = new ArrayList<>();
+        for (int i = 0; i < routeStores.size(); i++) {
+            RouteStore rs = routeStores.get(i);
+            names.add(rs.getStoreName());
+        }
+        List<StoreInRouteResponse> stores = new ArrayList<>();
+        for (int i = 0; i < routeStores.size(); i++) {
+            RouteStore rs = routeStores.get(i);
+
+            StoreInRouteResponse dto = StoreInRouteResponse.builder()
+                    .route_store_id(rs.getId())
+                    .store_id(rs.getStoreId())
+                    .order_in_route(rs.getOrderInRoute())
+                    .store_name(rs.getStoreName())
+                    .store_address(rs.getStoreAddress())
+                    .store_lat(rs.getStoreLat())
+                    .store_lng(rs.getStoreLng())
+                    .store_url(rs.getStoreUrl())
+                    .build();
+
+            stores.add(dto);
+        }
+
+        RouteResponse result = new RouteResponse();
+        result.setRoute_id(r.getId());
+        result.setUser_id(r.getUserId());
+        result.setUser_lat(r.getUserLat());
+        result.setUser_lng(r.getUserLng());
+        result.setGoal_steps(r.getGoal_steps());
+        result.setIs_completed(Boolean.TRUE.equals(r.getCompleted()));
+        result.setCreated_at(r.getCreatedAt());
+        result.setCompleted_at(r.getCompletedAt());
+        result.setStore_names(names);
+        result.setStores(stores);
+
+        return result;
     }
+//    private RouteResponse toResponse(Route r) {
+//        List<String> names = routeStoreRepository
+//                .findAllByRouteIdOrderByOrderInRouteAsc(r.getId())
+//                .stream()
+//                .map(RouteStore::getStoreName)
+//                .toList();
+//
+//        return RouteResponse.builder()
+//                .route_id(r.getId())
+//                .user_id(r.getUserId())
+//                .user_lat(r.getUserLat())
+//                .user_lng(r.getUserLng())
+//                .goal_steps(r.getGoal_steps())
+//                .is_completed(Boolean.TRUE.equals(r.getCompleted()))
+//                .created_at(r.getCreatedAt())
+//                .completed_at(r.getCompletedAt())
+//                .store_names(names)
+//                .build();
+//    }
 
 //    private RouteResponse toResponse(Route r, List<String> names) {
 //        return RouteResponse.builder()
