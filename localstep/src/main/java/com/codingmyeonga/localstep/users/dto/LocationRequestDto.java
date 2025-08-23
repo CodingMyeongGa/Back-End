@@ -1,5 +1,7 @@
 package com.codingmyeonga.localstep.users.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,14 +18,23 @@ import java.time.LocalDateTime;
 public class LocationRequestDto {
 
     @NotNull(message = "사용자 ID는 필수입니다.")
-    private Integer userId;
+    @JsonProperty("user_id")
+    private Long userId;
+
+    @NotNull(message = "루트 ID는 필수입니다.")
+    @JsonProperty("route_id")
+    private Long routeId;
 
     @NotNull(message = "위도는 필수입니다.")
+    @JsonProperty("latitude")
     private BigDecimal latitude;
 
     @NotNull(message = "경도는 필수입니다.")
+    @JsonProperty("longitude")
     private BigDecimal longitude;
 
     @NotNull(message = "측정 시각은 필수입니다.")
+    @JsonProperty("timestamp")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
 }
