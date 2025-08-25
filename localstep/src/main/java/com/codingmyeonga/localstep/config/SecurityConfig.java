@@ -90,8 +90,8 @@ public class SecurityConfig {
         configuration.addExposedHeader("Access-Control-Allow-Origin");
         configuration.addExposedHeader("Access-Control-Allow-Credentials");
         
-        // Preflight 요청 캐시 시간 설정
-        configuration.setMaxAge(3600L);
+        // Preflight 요청 캐시 시간 설정 (개발 중에는 제거 권장)
+        // configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
