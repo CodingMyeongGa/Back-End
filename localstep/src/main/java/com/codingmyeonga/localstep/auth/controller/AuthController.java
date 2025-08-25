@@ -1,13 +1,13 @@
 package com.codingmyeonga.localstep.auth.controller;
 
 import com.codingmyeonga.localstep.auth.dto.*;
-import com.codingmyeonga.localstep.auth.kakao.dto.*;
-import com.codingmyeonga.localstep.auth.service.AuthService;
+        import com.codingmyeonga.localstep.auth.kakao.dto.*;
+        import com.codingmyeonga.localstep.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import io.swagger.v3.oas.annotations.Operation;
+        import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -63,5 +63,15 @@ public class AuthController {
     @Operation(summary = "카카오 원스텝 로그인", description = "인가 코드를 직접 받아 로그인/회원가입을 한 번에 처리합니다.")
     public ResponseEntity<LoginResponse> kakaoOneStep(@RequestParam("code") String code) {
         return ResponseEntity.ok(authService.kakaoLoginByCode(code));
+    }
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "내 정보 조회",
+            description = "JWT 토큰을 이용하여 현재 로그인한 사용자의 id, email, nickname을 가져옵니다.",
+            security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    public ResponseEntity<UserResponse> getMyInfo(@RequestHeader("Authorization") String token) {
+        return ResponseEntity.ok(authService.getMyInfo(token));
     }
 }

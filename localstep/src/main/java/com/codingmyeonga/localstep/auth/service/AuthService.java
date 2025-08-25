@@ -112,4 +112,18 @@ public class AuthService {
         KakaoTokenResponse token = getKakaoTokenByCode(code);
         return kakaoLoginByAccessToken(token.getAccessToken());
     }
+
+    public UserResponse getMyInfo(String token) {
+        String jwt = token.replace("Bearer ", "");
+        String email = jwtTokenProvider.getEmailFromToken(jwt);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getNickname()
+        );
+    }
 }
