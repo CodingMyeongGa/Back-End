@@ -36,5 +36,6 @@ public class LocationRequestDto {
     @NotNull(message = "측정 시각은 필수입니다.")
     @JsonProperty("timestamp")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @io.swagger.v3.oas.annotations.media.Schema(example = "2025-08-23 09:30:18")
     private LocalDateTime timestamp;
 }
