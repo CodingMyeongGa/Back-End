@@ -65,8 +65,9 @@ public class SecurityConfig {
         configuration.addAllowedOrigin("https://43.201.15.212:8080"); // HTTPS 서버 IP + 포트
         
         // TODO: 프론트엔드 배포 도메인 확정 시 아래 줄 추가
-        configuration.addAllowedOrigin("front-end-7ay3.vercel.app");
-        
+        configuration.addAllowedOrigin("https://front-end-three-livid-14.vercel.app");
+
+
         // 임시: 모든 Origin 허용 (문제 해결 후 제거)
         // configuration.addAllowedOriginPattern("*");
         
